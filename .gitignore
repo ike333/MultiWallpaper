@@ -1,0 +1,20 @@
+# .NET build output
+bin/
+obj/
+*.user
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.sln
+*.swp
+
+# OS noise
+Thumbs.db
+.DS_Store
+
+# Program runtime artifacts (log next to exe)
+*.log
+
+# Obsidian (if this repo lives inside an Obsidian vault)
+.obsidian/
