@@ -2,6 +2,20 @@
 bin/
 obj/
 *.user
+*.pdb
+
+# 发布产物（exe/dll/zip 等可再生产物不进库；ico、RUNNING.txt、发布脚本保留）
+release/*.exe
+release/*.dll
+release/*.deps.json
+release/*.runtimeconfig.json
+release/*.zip
+release/*.log
+release/*.png
+release/*.docx
+release/*.json
+release/preview/
+
 
 # Visual Studio / Rider
 .vs/
