@@ -92,10 +92,11 @@ internal static class Program
 
     private static NotifyIcon CreateTrayIcon(WallpaperScheduler scheduler)
     {
+        // 托盘图标用程序自带的 ico（从 exe 资源提取），与任务栏图标一致
         var tray = new NotifyIcon
         {
             Text = "多显示器壁纸轮换",
-            Icon = SystemIcons.Application,
+            Icon = LoadAppIcon(),
         };
 
         var menu = new ContextMenuStrip();
@@ -171,5 +172,26 @@ internal static class Program
         miStatus.Text = scheduler.Status;
 
         return tray;
+    }
+
+    /// <summary>
+    /// 从 exe 内嵌的 ico 资源提取托盘图标；失败时退回系统默认图标。
+    /// </summary>
+    private static System.Drawing.Icon LoadAppIcon()
+    {
+        try
+        {
+            var asm = System.Reflection.Assembly.GetExecutingAssembly();
+            foreach (var name in asm.GetManifestResourceNames())
+            {
+                if (name.EndsWith(".ico", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    using var stream = asm.GetManifestResourceStream(name)!;
+                    return new System.Drawing.Icon(stream, new System.Drawing.Size(16, 16));
+                }
+            }
+        }
+        catch { }
+        return SystemIcons.Application;
     }
 }
