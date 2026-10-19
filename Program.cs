@@ -130,16 +130,27 @@ internal static class Program
             scheduler.AdvanceAll();
         });
 
-        var miStart = new ToolStripMenuItem("启动轮换", null, (_, _) =>
+        var miStart = new ToolStripMenuItem("启动轮换")
         {
-            var c = ConfigStore.Load();
-            if (c != null) scheduler.Start(c);
-        });
-
-        var miStop = new ToolStripMenuItem("停止轮换", null, (_, _) =>
+            CheckOnClick = true,   // 对号 = 当前轮换状态；点击文字自动切换启停
+        };
+        // 点击时根据当前对号状态切换启/停，并让文字同步语义
+        miStart.CheckedChanged += (_, _) =>
         {
-            scheduler.Stop();
-        });
+            if (miStart.Checked)
+            {
+                var c = ConfigStore.Load();
+                if (c != null) scheduler.Start(c);
+            }
+            else
+            {
+                scheduler.Stop();
+            }
+        };
+        // 初始对号反映真实运行状态
+        UpdateStartItem(scheduler, miStart);
+        // 后续每次状态变化（启停/应用/切换）同步对号与文字
+        scheduler.StatusChanged += () => UpdateStartItem(scheduler, miStart);
 
         var miExit = new ToolStripMenuItem("退出程序", null, (_, _) =>
         {
@@ -155,23 +166,35 @@ internal static class Program
         menu.Items.Add(miApplyNow);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(miStart);
-        menu.Items.Add(miStop);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(miExit);
         tray.ContextMenuStrip = menu;
 
         // 定期刷新托盘状态文字
         var timer = new System.Windows.Forms.Timer { Interval = 15000 };
-        timer.Tick += (_, _) => miStatus.Text = scheduler.Status;
+        timer.Tick += (_, _) =>
+        {
+            miStatus.Text = scheduler.Status;
+            UpdateStartItem(scheduler, miStart);
+        };
         timer.Start();
         _timers.Add(timer);
 
         tray.DoubleClick += (_, _) => OpenSettings();
 
-        scheduler.StatusChanged += () => miStatus.Text = scheduler.Status;
         miStatus.Text = scheduler.Status;
 
         return tray;
+    }
+
+    /// <summary>
+    /// 同步开关菜单项的对号与文字：对号表示"轮换正在运行"，
+    /// 文字随之切换为"停止轮换 / 启动轮换"，让状态一目了然。
+    /// </summary>
+    private static void UpdateStartItem(WallpaperScheduler scheduler, ToolStripMenuItem item)
+    {
+        item.Checked = scheduler.IsRunning;
+        item.Text = scheduler.IsRunning ? "停止轮换" : "启动轮换";
     }
 
     /// <summary>
